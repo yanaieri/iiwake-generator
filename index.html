@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>言い訳ジェネレーター｜使えそうで使えない言い訳製造機</title>
 <meta name="description" content="ボタンを押すと、使えそうで絶対に使えない言い訳が無限に出てきます。遅刻・締切・ダイエット…あらゆる場面の言い訳をどうぞ。">
 <meta property="og:title" content="言い訳ジェネレーター">
@@ -70,6 +71,7 @@
     margin-top:18px;font-size:.8rem;color:var(--muted);
   }
   .credibility b{color:var(--accent-dark)}
+  .credibility .quip{display:inline-block;margin-top:6px;font-style:italic;color:var(--accent-dark);font-size:.85rem}
 
   .controls{display:flex;gap:12px;justify-content:center;margin-top:22px;flex-wrap:wrap}
   .btn{
@@ -235,12 +237,23 @@ countEl.textContent = count.toLocaleString();
 
 const stars = n => "★".repeat(n)+"☆".repeat(5-n);
 
+// 星の数に応じた茶々（ツッコミ）
+const QUIPS = {
+  1:["言った瞬間に空気が凍ります。","これは信じる方が悪い。","小学生でも見抜きます。","正直に謝った方が早いです。","逆に清々しい。"],
+  2:["相手の眉がピクッと動くレベル。","8割バレてると思った方がいい。","目を見て言える自信、ある？","語尾が小さくなるやつ。","祈りながら使ってください。"],
+  3:["相手の機嫌次第では通る。","早口で言い切れば五分五分。","ノリと勢いが命です。","半分は本当っぽいのが救い。","沈黙に耐えられるなら可。"],
+  4:["お、ちょっと信じそう。","真顔で言えば勝てます。","証拠を求められなければ完璧。","相手が優しければ余裕。","採用一歩手前。"],
+  5:["天才的。誰も疑いません。","もはや真実では？","この言い訳、額に飾りたい。","ノーベル言い訳賞を授与します。","あなたに任せれば安心だ。"]
+};
+
 function generate(){
   excuseEl.classList.add('fade');
   setTimeout(()=>{
     excuseEl.textContent = makeExcuse();
     const cred = Math.floor(Math.random()*5)+1; // 1-5
-    credEl.innerHTML = `信ぴょう性: <b>${stars(cred)}</b>（${cred<=2?'即バレ':cred<=3?'微妙':'ワンチャン'}）`;
+    const label = cred<=2?'即バレ':cred<=3?'微妙':'ワンチャン';
+    const quip = pick(QUIPS[cred]);
+    credEl.innerHTML = `信ぴょう性: <b>${stars(cred)}</b>（${label}）<br><span class="quip">― ${quip}</span>`;
     excuseEl.classList.remove('fade');
     count++;
     localStorage.setItem('iiwake_count',count);
