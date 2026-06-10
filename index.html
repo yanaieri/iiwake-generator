@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>言い訳ジェネレーター｜使えそうで使えない言い訳製造機</title>
+<meta name="description" content="ボタンを押すと、使えそうで絶対に使えない言い訳が無限に出てきます。遅刻・締切・ダイエット…あらゆる場面の言い訳をどうぞ。">
+<meta property="og:title" content="言い訳ジェネレーター">
+<meta property="og:description" content="使えそうで絶対に使えない言い訳製造機。今日のあなたの言い訳は？">
+<meta property="og:type" content="website">
+<style>
+  :root{
+    --bg:#fff7ed;
+    --card:#ffffff;
+    --ink:#3a2e25;
+    --accent:#ff7a3d;
+    --accent-dark:#e85d1f;
+    --muted:#9c8b7d;
+    --shadow:0 12px 30px rgba(180,110,60,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",system-ui,sans-serif;
+    background:
+      radial-gradient(circle at 20% 10%, #ffe3cc 0%, transparent 45%),
+      radial-gradient(circle at 85% 80%, #ffd9b0 0%, transparent 40%),
+      var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .wrap{width:100%;max-width:560px;text-align:center}
+  h1{font-size:1.9rem;letter-spacing:.02em;margin-bottom:4px}
+  h1 .emoji{font-style:normal}
+  .sub{color:var(--muted);font-size:.85rem;margin-bottom:22px}
+
+  .scene-tabs{
+    display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:20px;
+  }
+  .scene-tabs button{
+    border:2px solid transparent;background:#fff;color:var(--ink);
+    padding:7px 14px;border-radius:999px;font-size:.85rem;cursor:pointer;
+    box-shadow:0 2px 6px rgba(180,110,60,.12);transition:.15s;
+    font-weight:600;
+  }
+  .scene-tabs button:hover{transform:translateY(-1px)}
+  .scene-tabs button.active{background:var(--accent);color:#fff;border-color:var(--accent-dark)}
+
+  .card{
+    background:var(--card);border-radius:24px;padding:38px 28px;
+    box-shadow:var(--shadow);min-height:200px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .card::before{
+    content:"”";position:absolute;top:-18px;left:14px;font-size:6rem;
+    color:#ffe0c7;font-family:Georgia,serif;line-height:1;pointer-events:none;
+  }
+  .excuse{
+    font-size:1.45rem;line-height:1.65;font-weight:700;
+    transition:opacity .18s ease;min-height:3em;display:flex;align-items:center;
+  }
+  .excuse.fade{opacity:0}
+  .credibility{
+    margin-top:18px;font-size:.8rem;color:var(--muted);
+  }
+  .credibility b{color:var(--accent-dark)}
+
+  .controls{display:flex;gap:12px;justify-content:center;margin-top:22px;flex-wrap:wrap}
+  .btn{
+    border:none;border-radius:999px;padding:14px 30px;font-size:1.05rem;
+    font-weight:800;cursor:pointer;transition:.15s;
+  }
+  .btn-main{
+    background:var(--accent);color:#fff;box-shadow:0 8px 18px rgba(232,93,31,.35);
+  }
+  .btn-main:hover{background:var(--accent-dark);transform:translateY(-2px)}
+  .btn-main:active{transform:translateY(0) scale(.98)}
+  .btn-sub{
+    background:#fff;color:var(--accent-dark);border:2px solid var(--accent);
+    font-size:.9rem;padding:13px 20px;
+  }
+  .btn-sub:hover{background:#fff1e6}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:#fff;padding:10px 20px;border-radius:999px;
+    font-size:.85rem;opacity:0;transition:.25s;pointer-events:none;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  footer{margin-top:26px;font-size:.75rem;color:var(--muted)}
+  footer a{color:var(--accent-dark);text-decoration:none}
+  .count{font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><span class="emoji">🙇</span> 言い訳ジェネレーター</h1>
+  <p class="sub">使えそうで、絶対に使えない言い訳製造機</p>
+
+  <div class="scene-tabs" id="tabs"></div>
+
+  <div class="card">
+    <div class="excuse" id="excuse">ボタンを押して、今日の言い訳を生成しよう。</div>
+    <div class="credibility" id="cred"></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-main" id="gen">言い訳を生成 🎲</button>
+    <button class="btn btn-sub" id="copy">コピー 📋</button>
+    <button class="btn btn-sub" id="share">シェア 🐦</button>
+  </div>
+
+  <footer>
+    これまで <span class="count" id="count">0</span> 個の言い訳が生成されました。<br>
+    ※ 実際の使用による結果について当ジェネレーターは一切の責任を負いません。
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DATA = {
+  "遅刻": {
+    openers: ["実は","正直に言うと","信じてもらえないかもしれませんが","昨夜から","家を出た瞬間に"],
+    middles: [
+      "二度寝の二度寝で三度寝してしまい",
+      "近所の猫に「行くな」という顔をされ",
+      "靴下が片方だけ異次元に消え",
+      "目覚まし時計と話し合いが平行線をたどり",
+      "玄関で運命の人とすれ違いそうな予感がして",
+      "信号が全部赤になる呪いにかかっており",
+      "布団が想像以上に良いことを言ってきて",
+      "冷蔵庫の前で人生について考え込んでしまい"
+    ],
+    closers: ["結果として遅刻しました。","気づいたら昼でした。","時空が歪んだとしか思えません。","これは不可抗力です。","明日はたぶん間に合います。"]
+  },
+  "締切": {
+    openers: ["締切については","原稿の件ですが","正直ベースで言うと","スケジュール的には","鋭意ということで"],
+    middles: [
+      "完璧主義が完璧に発動してしまい一文字も書けず",
+      "資料を探していたら昔の写真が出てきて見入ってしまい",
+      "やる気が朝に出社して夜には退社してしまい",
+      "脳内では既に完成しており出力だけが残っており",
+      "締切を一度見なかったことにする裏技を試しており",
+      "集中するためのプレイリスト作りに集中してしまい",
+      "ベストを尽くすための準備運動をしている段階で"
+    ],
+    closers: ["あと少しだけ時間をください。","クオリティは保証します（たぶん）。","気持ちはもう提出済みです。","来週の自分に期待しています。","これも作品の一部です。"]
+  },
+  "ダイエット": {
+    openers: ["ダイエットは","体重については","これは戦略なのですが","痩せる準備として","糖質的には"],
+    middles: [
+      "明日から本気を出すための充電期間中であり",
+      "ケーキは飲み物なのでカロリーに含まれず",
+      "笑うと痩せると聞いたのでお菓子で笑顔を作っており",
+      "脂肪は努力の貯金だと前向きに捉えており",
+      "体重計が私を過大評価しているだけであり",
+      "筋肉は脂肪より重いので増量はむしろ成果であり",
+      "夜食は明日の朝食を前借りしただけなので"
+    ],
+    closers: ["プラマイゼロです。","健康なら問題ありません。","来月こそ夏が来ます。","これは計画的な増量です。","心はスリムです。"]
+  },
+  "返信遅れ": {
+    openers: ["返信遅れてごめん、","LINEの件だけど","通知については","メッセージは","既読の件は"],
+    middles: [
+      "見た瞬間に満足してしまい返した気になっており",
+      "完璧な返事を3日かけて考えていたら忘れており",
+      "スマホが手の届く範囲で絶妙に届かず",
+      "返そうとした瞬間に必ず誰かに話しかけられ",
+      "頭の中では既に5往復くらいやり取りが完結しており",
+      "スタンプ選びに全人生を賭けてしまい"
+    ],
+    closers: ["悪気はゼロです。","気持ちは光の速さで届けてた。","これからは秒で返します（当社比）。","縁は切れてないから大丈夫。","とりあえず元気です。"]
+  },
+  "やらかし": {
+    openers: ["これはですね","結論から言うと","落ち着いて聞いてほしいのですが","状況を説明すると","一応報告ですが"],
+    middles: [
+      "良かれと思ってやったことが全部裏目に出ており",
+      "想定の斜め上のさらに上を行く展開になり",
+      "誰も悪くないのに何かが起きてしまい",
+      "マニュアル通りにやったらマニュアルが間違っており",
+      "完璧な計画に唯一あった穴に綺麗に落ち",
+      "宇宙のリズムと私のリズムが合わず"
+    ],
+    closers: ["再発防止に努めます。","学びはありました。","誰のせいでもありません、たぶん。","結果オーライにしましょう。","次は成功させます。"]
+  }
+};
+
+const scenes = Object.keys(DATA);
+let current = scenes[0];
+
+const tabsEl = document.getElementById('tabs');
+const excuseEl = document.getElementById('excuse');
+const credEl = document.getElementById('cred');
+const countEl = document.getElementById('count');
+const toastEl = document.getElementById('toast');
+
+scenes.forEach((s,i)=>{
+  const b=document.createElement('button');
+  b.textContent=s;
+  if(i===0)b.classList.add('active');
+  b.onclick=()=>{
+    current=s;
+    [...tabsEl.children].forEach(c=>c.classList.remove('active'));
+    b.classList.add('active');
+    generate();
+  };
+  tabsEl.appendChild(b);
+});
+
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+
+function makeExcuse(){
+  const d=DATA[current];
+  return pick(d.openers)+pick(d.middles)+pick(d.closers);
+}
+
+let count = Number(localStorage.getItem('iiwake_count')||0);
+countEl.textContent = count.toLocaleString();
+
+const stars = n => "★".repeat(n)+"☆".repeat(5-n);
+
+function generate(){
+  excuseEl.classList.add('fade');
+  setTimeout(()=>{
+    excuseEl.textContent = makeExcuse();
+    const cred = Math.floor(Math.random()*5)+1; // 1-5
+    credEl.innerHTML = `信ぴょう性: <b>${stars(cred)}</b>（${cred<=2?'即バレ':cred<=3?'微妙':'ワンチャン'}）`;
+    excuseEl.classList.remove('fade');
+    count++;
+    localStorage.setItem('iiwake_count',count);
+    countEl.textContent = count.toLocaleString();
+  },150);
+}
+
+function toast(msg){
+  toastEl.textContent=msg;
+  toastEl.classList.add('show');
+  setTimeout(()=>toastEl.classList.remove('show'),1600);
+}
+
+document.getElementById('gen').onclick=generate;
+
+document.getElementById('copy').onclick=async()=>{
+  const t=excuseEl.textContent;
+  try{ await navigator.clipboard.writeText(t); toast('コピーしました 📋'); }
+  catch{ toast('コピーできませんでした'); }
+};
+
+document.getElementById('share').onclick=()=>{
+  const t=excuseEl.textContent;
+  const url='https://twitter.com/intent/tweet?text='+encodeURIComponent('【'+current+'の言い訳】\n'+t+'\n\n#言い訳ジェネレーター')+'&url='+encodeURIComponent(location.href);
+  window.open(url,'_blank');
+};
+
+// 初回表示
+generate();
+</script>
+</body>
+</html>
