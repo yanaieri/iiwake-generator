@@ -217,9 +217,17 @@ scenes.forEach((s,i)=>{
 
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 
+// 「、」で繋ぐ。前のパーツが既に句読点で終わっていれば重ねない。
+function join(...parts){
+  return parts.reduce((acc,p)=>{
+    if(!acc) return p;
+    return /[、。！？]$/.test(acc) ? acc+p : acc+'、'+p;
+  },'');
+}
+
 function makeExcuse(){
   const d=DATA[current];
-  return pick(d.openers)+pick(d.middles)+pick(d.closers);
+  return join(pick(d.openers),pick(d.middles),pick(d.closers));
 }
 
 let count = Number(localStorage.getItem('iiwake_count')||0);
